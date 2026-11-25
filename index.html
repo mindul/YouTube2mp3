@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube → MP3</title>
+<meta name="description" content="YouTube 주소를 붙여넣으면 mp3로 변환해서 내려받습니다. 변환은 서버를 켜 둔 컴퓨터에서 직접 처리합니다.">
+<meta name="theme-color" content="#2433e8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a24b8" media="(prefers-color-scheme: dark)">
+<style>
+  :root {
+    color-scheme: light dark;
+    --field: light-dark(#2433e8, #1a24b8);
+    --ground: light-dark(#f3f4fb, #0b0d24);
+    --ink: light-dark(#0e1030, #f2f3ff);
+    --muted: light-dark(#4a4d6e, #a9add6);
+    --rule: light-dark(#d5d8ee, #262a5a);
+    --panel: light-dark(#ffffff, #12153a);
+    --well: light-dark(#f3f4fb, #0b0d24);
+    --btn-bg: light-dark(#0e1030, #c8f73a);
+    --btn-bg-hover: light-dark(#23275f, #d9ff6a);
+    --btn-fg: light-dark(#ffffff, #0e1030);
+    --strip: light-dark(#0e1030, #070920);
+    --step: light-dark(#2433e8, #c8f73a);
+    --focus: light-dark(#2433e8, #c8f73a);
+    --placeholder: light-dark(#5a5d80, #9a9ecb);
+    --lime: #c8f73a;
+    --coral: #ff9a8c;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --pad: clamp(1.25rem, 5vw, 4.5rem);
+    --font: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-color: light-dark(#2433e8, #3a44c9) var(--ground); }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 1.0625rem/1.7 var(--font); -webkit-font-smoothing: antialiased; word-break: keep-all; }
+  ::selection { background: var(--lime); color: #0e1030; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+  a { color: inherit; }
+
+  /* ---------- 히어로 ---------- */
+  .hero { position: relative; display: flex; flex-direction: column; min-height: min(100svh, 58rem); overflow: hidden; background: var(--field); color: #fff; --focus: var(--lime); }
+  .nav { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 1.5rem var(--pad); }
+  .brand { display: inline-flex; align-items: center; gap: 0.7rem; font-weight: 800; letter-spacing: -0.01em; text-decoration: none; }
+  .brand svg { width: 1.6rem; height: 1.6rem; }
+  .nav ul { display: flex; gap: 2rem; margin: 0; padding: 0; list-style: none; font-size: 0.9375rem; font-weight: 600; }
+  .nav a.link { text-decoration: none; opacity: 0.88; text-underline-offset: 0.4em; }
+  .nav a.link:hover { opacity: 1; text-decoration: underline; text-decoration-thickness: 2px; }
+
+  .hero-body { position: relative; z-index: 1; padding: clamp(1.5rem, 6vh, 4.5rem) var(--pad) 3.5rem; }
+  h1 { margin: 0; max-width: 7.5em; font-size: clamp(2.75rem, 7vw, 6rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.035em; text-wrap: balance; }
+  .lede { margin: 1.5rem 0 0; max-width: 34rem; font-size: 1.25rem; line-height: 1.6; text-wrap: balance; color: rgb(255 255 255 / 0.88); }
+
+  .wave { position: absolute; z-index: 0; inset: auto 0 0; height: 46%; display: flex; align-items: flex-end; gap: clamp(6px, 1vw, 14px); padding: 0 var(--pad); pointer-events: none; }
+  .wave .bar { flex: 1; min-width: 0; height: 100%; border-radius: 999px 999px 0 0; background: color-mix(in oklab, #fff 11%, var(--field)); transform-origin: bottom; transform: scaleY(var(--h)); animation: rise 1s var(--ease) both; animation-delay: calc(var(--i) * 16ms); transition: background-color 0.5s; }
+  body[data-state="converting"] .wave .bar { background: color-mix(in oklab, #fff 17%, var(--field)); animation: eq var(--d) ease-in-out var(--delay) infinite alternate; }
+
+  /* ---------- 도구 패널 ---------- */
+  .tool { margin-top: 2.5rem; max-width: 56rem; padding: 0.75rem; border-radius: 1.25rem; background: var(--panel); color: var(--ink); --focus: light-dark(#2433e8, #c8f73a); box-shadow: 0 2px 6px rgb(5 8 60 / 0.3), 0 28px 48px -18px rgb(5 8 60 / 0.6); }
+  .tool form { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; }
+  .field { position: relative; }
+  .field svg { position: absolute; left: 1.15rem; top: 50%; width: 1.4rem; height: 1.4rem; translate: 0 -50%; fill: none; stroke: var(--muted); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  input[type="url"] { width: 100%; height: 4rem; padding: 0 1.1rem 0 3.4rem; font: inherit; font-size: 1.125rem; color: var(--ink); caret-color: var(--focus); background: var(--well); border: 1.5px solid transparent; border-radius: 0.9rem; transition: border-color 0.2s, background-color 0.2s; }
+  input[type="url"]::placeholder { color: var(--placeholder); opacity: 1; }
+  input[type="url"]:hover { border-color: var(--rule); }
+  input[type="url"]:focus-visible { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 28%, transparent); }
+  .go { height: 4rem; padding: 0 2rem; font: inherit; font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.01em; color: var(--btn-fg); background: var(--btn-bg); border: 0; border-radius: 0.9rem; cursor: pointer; transition: background-color 0.2s, transform 0.2s var(--ease); }
+  .go:hover { background: var(--btn-bg-hover); }
+  .go:active { transform: scale(0.98); }
+  .go:disabled { opacity: 0.6; cursor: progress; }
+
+  .strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.1rem; min-height: 3.75rem; margin-top: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 0.9rem; background: var(--strip); color: #dde0ff; }
+  .meter { display: flex; align-items: center; gap: 3px; width: 141px; height: 28px; flex: none; }
+  .meter .bar { width: 3px; height: 100%; border-radius: 2px; background: #596099; transform: scaleY(calc(var(--h) * 0.4)); transition: background-color 0.3s; }
+  body[data-state="converting"] .meter .bar { background: var(--lime); animation: eq var(--d) ease-in-out var(--delay) infinite alternate; }
+  body[data-state="done"] .meter .bar { background: var(--lime); transform: scaleY(var(--h)); }
+  body[data-state="error"] .meter .bar { background: var(--coral); transform: scaleY(0.15); }
+  .status { flex: 1 1 14rem; margin: 0; font-size: 0.9375rem; line-height: 1.5; }
+  .status strong { color: #fff; font-weight: 700; word-break: break-all; }
+  body[data-state="error"] .status { color: var(--coral); }
+  .again { display: none; align-items: center; gap: 0.45rem; padding: 0.45rem 0.85rem; font: inherit; font-size: 0.875rem; font-weight: 700; color: #fff; background: transparent; border: 1px solid rgb(255 255 255 / 0.35); border-radius: 0.6rem; cursor: pointer; transition: background-color 0.2s; --focus: var(--lime); }
+  .again:hover { background: rgb(255 255 255 / 0.12); }
+  .again svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  body[data-state="done"] .again { display: inline-flex; }
+
+  /* ---------- 본문 섹션 ---------- */
+  section { padding: clamp(4rem, 9vw, 7rem) var(--pad); }
+  .wrap { max-width: 80rem; margin: 0 auto; }
+  h2 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; text-wrap: balance; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 3rem; margin: 3.5rem 0 0; padding: 0; list-style: none; counter-reset: step; }
+  .steps li { counter-increment: step; padding-top: 1.25rem; border-top: 2px solid var(--ink); }
+  .steps li:nth-child(2) { margin-top: 2.5rem; }
+  .steps li:nth-child(3) { margin-top: 5rem; }
+  .steps li::before { content: counter(step); display: block; font-size: 3.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--step); }
+  .steps h3 { margin: 1.25rem 0 0.5rem; font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; }
+  .steps p { margin: 0; max-width: 24rem; color: var(--muted); }
+
+  .notes { padding-top: 6rem; border-top: 1px solid var(--rule); }
+  .notes .wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 3rem; }
+  dl { margin: 0; }
+  .row { display: grid; grid-template-columns: 10rem 1fr; gap: 1rem 2rem; padding: 1.5rem 0; border-top: 1px solid var(--rule); }
+  .row:first-child { border-top: 2px solid var(--ink); }
+  dt { font-weight: 800; letter-spacing: -0.01em; }
+  dd { margin: 0; color: var(--muted); }
+
+  footer { padding: 2rem var(--pad) 2.5rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.875rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; }
+  footer p { margin: 0; }
+
+  /* ---------- 모션 ---------- */
+  @keyframes rise { from { transform: scaleY(0); } }
+  @keyframes eq { from { transform: scaleY(var(--lo)); } to { transform: scaleY(var(--hi)); } }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .bar { animation: none !important; }
+    .go, .again, input[type="url"] { transition: none; }
+  }
+
+  /* ---------- 좁은 화면 ---------- */
+  @media (max-width: 52rem) {
+    .nav ul { gap: 1.25rem; }
+    .tool form { grid-template-columns: 1fr; }
+    .go { width: 100%; }
+    .steps { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+    .steps li:nth-child(n) { margin-top: 0; }
+    .notes .wrap { grid-template-columns: 1fr; gap: 2rem; }
+    .row { grid-template-columns: 1fr; gap: 0.25rem; }
+  }
+</style>
+</head>
+<body data-state="idle">
+
+<header class="hero">
+  <nav class="nav" aria-label="주요 메뉴">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="2" y="9" width="3.5" height="6" rx="1.75"/><rect x="7.5" y="4" width="3.5" height="16" rx="1.75"/><rect x="13" y="7" width="3.5" height="10" rx="1.75"/><rect x="18.5" y="11" width="3.5" height="2" rx="1"/></svg>
+      YouTube → MP3
+    </a>
+    <ul>
+      <li><a class="link" href="#how">사용 방법</a></li>
+      <li><a class="link" href="#notes">알아두기</a></li>
+    </ul>
+  </nav>
+
+  <div class="wave" id="wave" aria-hidden="true"></div>
+
+  <div class="hero-body">
+    <h1>링크 하나면 mp3 한 곡.</h1>
+    <p class="lede">서버를 켜 둔 컴퓨터에서 직접 변환합니다. 계정도 광고도 필요 없습니다.</p>
+
+    <div class="tool">
+      <form id="form" novalidate>
+        <div class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <input id="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" autofocus placeholder="https://www.youtube.com/watch?v=..." aria-label="YouTube 영상 주소">
+        </div>
+        <button id="btn" class="go" type="submit">mp3로 변환</button>
+      </form>
+      <div class="strip">
+        <div class="meter" id="meter" aria-hidden="true"></div>
+        <p class="status" id="status" role="status" aria-live="polite">대기 중입니다. 위 칸에 영상 주소를 붙여넣고 변환을 누르세요.</p>
+        <button id="again" class="again" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>
+          다시 받기
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="how">
+    <div class="wrap">
+      <h2>붙여넣고, 누르고, 받으면 끝.</h2>
+      <ol class="steps">
+        <li>
+          <h3>YouTube에서 주소 복사</h3>
+          <p>브라우저 주소창이나 영상의 공유 버튼에서 영상 링크를 복사합니다.</p>
+        </li>
+        <li>
+          <h3>위 입력칸에 붙여넣기</h3>
+          <p>영상 한 개의 주소를 넣고 변환 버튼이나 Enter 키를 누릅니다.</p>
+        </li>
+        <li>
+          <h3>mp3 받기</h3>
+          <p>변환이 끝나면 영상 제목이 파일 이름이 되어 바로 저장됩니다.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="notes" class="notes">
+    <div class="wrap">
+      <h2>알아두면 좋은 점</h2>
+      <dl>
+        <div class="row">
+          <dt>음질</dt>
+          <dd>최고 품질 설정으로 mp3를 만듭니다. 원본 영상의 음질이 낮으면 그 이상은 나오지 않습니다.</dd>
+        </div>
+        <div class="row">
+          <dt>파일 이름</dt>
+          <dd>영상 제목이 파일 이름이 되고, 제목 같은 정보도 mp3 안에 함께 담깁니다.</dd>
+        </div>
+        <div class="row">
+          <dt>보관</dt>
+          <dd>변환한 파일은 내려받기가 끝나면 서버에서 지워집니다. 변환 기록도 남기지 않습니다.</dd>
+        </div>
+        <div class="row">
+          <dt>지원 주소</dt>
+          <dd>youtube.com, m.youtube.com, music.youtube.com, youtu.be 의 영상 주소를 지원합니다.</dd>
+        </div>
+        <div class="row">
+          <dt>접속</dt>
+          <dd>서버를 켠 컴퓨터와 같은 공유기에 연결된 기기에서도 같은 주소로 열 수 있습니다.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>저작권이 있는 콘텐츠는 권리자가 허락한 범위에서 개인적으로만 이용하세요.</p>
+    <p>yt-dlp · ffmpeg 로 변환합니다</p>
+  </div>
+</footer>
+
+<script>
+const body = document.body;
+const form = document.getElementById('form');
+const input = document.getElementById('url');
+const btn = document.getElementById('btn');
+const statusEl = document.getElementById('status');
+const again = document.getElementById('again');
+
+/* 이퀄라이저 막대: 크기와 움직임은 막대마다 고정된 값에서 계산한다 */
+function frac(n) { const x = Math.sin(n * 12.9898 + 7.233) * 43758.5453; return x - Math.floor(x); }
+function makeBars(el, count, min, max, shaped) {
+  for (let i = 0; i < count; i++) {
+    const env = shaped ? 0.78 + 0.22 * Math.sin((i / count) * Math.PI * 3.1 + 0.6) : 1;
+    const h = Math.min(1, (min + frac(i + 1) * (max - min)) * env);
+    const bar = document.createElement('span');
+    bar.className = 'bar';
+    bar.style.cssText =
+      `--i:${i};--h:${h.toFixed(3)};--lo:${(h * 0.45).toFixed(3)};--hi:${Math.min(1, h * 1.3 + 0.12).toFixed(3)};` +
+      `--d:${(0.55 + frac(i + 40) * 0.9).toFixed(2)}s;--delay:${(-frac(i + 80)).toFixed(2)}s`;
+    el.appendChild(bar);
+  }
+}
+makeBars(document.getElementById('wave'), 40, 0.25, 1, true);
+makeBars(document.getElementById('meter'), 24, 0.3, 1, false);
+
+/* 상태 표시 */
+function setState(state, html) {
+  body.dataset.state = state;
+  statusEl.textContent = '';
+  if (typeof html === 'string') statusEl.textContent = html;
+  else statusEl.append(...html);
+}
+function strong(text) { const s = document.createElement('strong'); s.textContent = text; return s; }
+
+let lastUrl = null;
+let lastName = null;
+function save(url, name) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const value = input.value.trim();
+  if (!value) {
+    setState('error', '주소를 입력해 주세요.');
+    input.focus();
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '변환 중…';
+  setState('converting', '변환 중입니다. 영상 길이에 따라 수십 초 걸릴 수 있어요.');
+  try {
+    const res = await fetch('/api/convert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: value }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `오류가 발생했습니다 (${res.status})`);
+    }
+    const name = decodeURIComponent(res.headers.get('X-Filename') || 'audio.mp3');
+    const blob = await res.blob();
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = URL.createObjectURL(blob);
+    lastName = name;
+    save(lastUrl, lastName);
+    setState('done', ['완료: ', strong(name), ' 저장을 시작했습니다.']);
+  } catch (err) {
+    setState('error', err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'mp3로 변환';
+  }
+});
+
+again.addEventListener('click', () => { if (lastUrl) save(lastUrl, lastName); });
+</script>
+</body>
+</html>
