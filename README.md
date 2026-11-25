@@ -8,6 +8,8 @@ YouTube 영상 주소를 붙여넣으면 mp3 파일로 변환해서 내려받는
 - 같은 공유기에 연결된 다른 기기에서도 접속할 수 있습니다.
 - 외부 npm 패키지에 의존하지 않습니다(Node.js 내장 모듈만 사용).
 
+<img width="836" height="592" alt="image" src="https://github.com/user-attachments/assets/a2ee5559-8273-46cd-9dc7-c42c9524a0a4" />
+
 ## 준비물
 
 | 도구 | 용도 |
