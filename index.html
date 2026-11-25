@@ -50,6 +50,9 @@
   h1 { margin: 0; max-width: 7.5em; font-size: clamp(2.75rem, 7vw, 6rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.035em; text-wrap: balance; }
   .lede { margin: 1.5rem 0 0; max-width: 34rem; font-size: 1.25rem; line-height: 1.6; text-wrap: balance; color: rgb(255 255 255 / 0.88); }
 
+  .lede span { display: block; }
+  @media (min-width: 30rem) { .lede span { white-space: nowrap; } }
+
   .wave { position: absolute; z-index: 0; inset: auto 0 0; height: 46%; display: flex; align-items: flex-end; gap: clamp(6px, 1vw, 14px); padding: 0 var(--pad); pointer-events: none; }
   .wave .bar { flex: 1; min-width: 0; height: 100%; border-radius: 999px 999px 0 0; background: color-mix(in oklab, #fff 11%, var(--field)); transform-origin: bottom; transform: scaleY(var(--h)); animation: rise 1s var(--ease) both; animation-delay: calc(var(--i) * 16ms); transition: background-color 0.5s; }
   body[data-state="converting"] .wave .bar { background: color-mix(in oklab, #fff 17%, var(--field)); animation: eq var(--d) ease-in-out var(--delay) infinite alternate; }
@@ -146,7 +149,7 @@
 
   <div class="hero-body">
     <h1>링크 하나면 mp3 한 곡.</h1>
-    <p class="lede">서버를 켜 둔 컴퓨터에서 직접 변환합니다. 계정도 광고도 필요 없습니다.</p>
+    <p class="lede"><span>서버를 켜 둔 컴퓨터에서 직접 변환합니다.</span> <span>계정도 광고도 필요 없습니다.</span></p>
 
     <div class="tool">
       <form id="form" novalidate>
