@@ -28,6 +28,14 @@ brew install node yt-dlp ffmpeg
 
 ## 실행
 
+macOS에서는 `launch.command`를 더블클릭하면 서버가 시작되고 브라우저가 자동으로 열립니다. 터미널에서는 다음과 같이 실행합니다.
+
+```sh
+./launch.command
+```
+
+`launch.command`는 `node`, `yt-dlp`, `ffmpeg`가 설치되어 있는지 먼저 확인하고, 이미 서버가 실행 중이면 새로 띄우지 않고 브라우저만 엽니다. 브라우저를 자동으로 열지 않으려면 `NO_OPEN=1 ./launch.command`로 실행하세요. 직접 실행하려면 다음 명령을 쓰면 됩니다.
+
 ```sh
 node server.js
 ```
@@ -98,6 +106,7 @@ command -v yt-dlp ffmpeg
 
 | 파일 | 설명 |
 |---|---|
+| `launch.command` | 서버 실행 스크립트(macOS에서 더블클릭) |
 | `server.js` | HTTP 서버와 변환 처리 |
 | `index.html` | 화면(HTML, CSS, JS가 한 파일) |
 | `PRODUCT.md` | 제품 정보 기록 |
