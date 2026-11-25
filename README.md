@@ -26,6 +26,8 @@ brew install node yt-dlp ffmpeg
 
 다른 운영체제에서는 각 도구의 설치 안내를 따르고, `yt-dlp`와 `ffmpeg`가 `PATH`에서 실행되는지 확인하세요.
 
+새 맥북에 처음부터 설치하는 방법은 [install.md](install.md)를 참고하세요.
+
 ## 실행
 
 macOS에서는 `launch.command`를 더블클릭하면 서버가 시작되고 브라우저가 자동으로 열립니다. 터미널에서는 다음과 같이 실행합니다.
@@ -107,6 +109,7 @@ command -v yt-dlp ffmpeg
 | 파일 | 설명 |
 |---|---|
 | `launch.command` | 서버 실행 스크립트(macOS에서 더블클릭) |
+| `install.md` | 다른 맥북에 설치하고 실행하는 방법 |
 | `server.js` | HTTP 서버와 변환 처리 |
 | `index.html` | 화면(HTML, CSS, JS가 한 파일) |
 | `PRODUCT.md` | 제품 정보 기록 |
